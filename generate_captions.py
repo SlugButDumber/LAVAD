@@ -35,33 +35,3 @@ class Caption_Generator:
             captions = self.processor.batch_decode(generated_ids, skip_special_tokens=True)
 
         return captions # list of captions for each frame of the video
-
-    def generate_captions2(self, image_paths, device, max_length=50, num_beams=5):
-        """
-        Generates captions for a batch of images using BLIP-2 (one video).
-        
-        Args:
-            image_paths (list of str): List of paths to image files.
-            device (str): Device to run the model on ("cuda" or "cpu").
-            max_length (int): Maximum length of the generated captions.
-            num_beams (int): Number of beams for beam search.
-    
-        Returns:
-            list of str: List of generated captions.
-        """
-        images = [Image.open(path).convert("RGB") for path in image_paths]
-        
-        # Add a prompt to guide the caption generation
-        prompt = "a picture of "
-        
-        # Process images and prompt together
-        inputs = self.processor(images=images, text=[prompt] * len(images), return_tensors="pt", padding=True).to(device, torch.float16)
-    
-        with torch.no_grad():
-            generated_ids = self.model.generate(**inputs, max_new_tokens=max_length, num_beams=num_beams)
-            captions = self.processor.batch_decode(generated_ids, skip_special_tokens=True)
-    
-        # Post-process captions to remove the prompt
-        cleaned_captions = [caption.replace(prompt, "", 1).strip() for caption in captions]
-    
-        return cleaned_captions
